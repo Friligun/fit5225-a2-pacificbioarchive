@@ -10,6 +10,7 @@ callback secrets, model weights and Terraform state are intentionally omitted.
 - API Gateway: `https://7ijuyi2q17.execute-api.ap-southeast-2.amazonaws.com`
 - `GET /api/health`: HTTP 200, `{"status":"ok","environment":"production"}`
 - `GET /auth/config`: HTTP 200 with the deployed Cognito client and domain
+- Cognito callback/logout URLs: deployed API HTTPS origin
 - API Gateway `$default` stage: auto-deploy enabled
 - API and Dispatcher Lambda image URIs are digest-pinned in the untracked
   `infra/terraform/terraform.tfvars`.

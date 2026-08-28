@@ -30,11 +30,13 @@ credentials, tokens or other account secrets.
 - AWS account `748998941962` is signed in. AWS Free Tier credit shows
   `US$100.00` issued, `US$0.00` used and `US$100.00` remaining, expiring
   `2027-08-27`.
-- Alibaba Cloud provider credentials are configured for the Terraform plan in
-  `cn-hangzhou`; no project resources have been created.
-- Alibaba Function Compute currently contains an existing unrelated
-  `healthbridge-api` function. It must not be modified or deleted.
-- No project resources have been created by this work yet.
+- AWS core resources are deployed in `ap-southeast-2`; the API Gateway
+  `$default` stage is auto-deployed and `/api/health` returns HTTP 200.
+- The Cognito client callback and logout URLs use the deployed API HTTPS origin.
+- Alibaba OSS model bucket and Function Compute Worker are deployed in
+  `cn-hangzhou`; the Worker uses a scoped OSS-read execution role.
+- Alibaba Function Compute also contains an existing unrelated `healthbridge-api`
+  function; it was not modified.
 
 ## Current blockers
 
@@ -48,13 +50,11 @@ credentials, tokens or other account secrets.
   public ECR base image remains unreachable through the current network, so the
   API and Dispatcher use the AWS Lambda Runtime Interface Client on the tested
   Python base image instead.
-- A read-only `terraform plan` succeeds with `26 to add, 0 to change, 0 to
-  destroy`; it has not been applied.
-- AWS identity checks succeed for account `748998941962`; Alibaba CLI account
-  lookup needs a follow-up command, while the Terraform provider plan succeeds.
-- Cloud deployment inputs are still required: one AWS region, a globally
-  unique Alibaba OSS bucket, a Cognito domain prefix, Function Compute
-  endpoint and immutable image URIs.
+- The encrypted remote Terraform backend is configured, but the local Terraform
+  client currently times out when listing the S3 state bucket. The live API
+  Gateway stage therefore still needs to be imported into state.
+- AWS and Alibaba identity checks succeed, and API, Dispatcher and Worker image
+  URIs are digest-pinned in the untracked deployment variables.
 - The local repository is initialized on `main` and pushed to
   `https://github.com/Friligun/fit5225-a2-pacificbioarchive.git`; GitHub
   currently reports it as public, so an owner must change it to Private and
@@ -62,12 +62,9 @@ credentials, tokens or other account secrets.
 
 ## Next actions
 
-1. Scan the built images, then push immutable API and Dispatcher digests to the
-   private ECR repositories after Terraform bootstrap. The Worker image should
-   retain the tested MegaDetector/ONNX dependency combination when deployed to
-   Alibaba Function Compute.
-3. Fill the remaining Terraform inputs (immutable image URIs, private Worker
-   endpoint and final HTTPS callback/logout URLs), configure encrypted remote
-   state, and review the plan before any apply.
-4. Change the GitHub repository to Private and invite the required accounts.
-5. Capture the live evidence listed in `PRE_SUBMISSION_CHECKLIST.md`.
+1. Capture the live Cognito, upload, processing, search, bulk-edit, deletion and
+   SNS evidence listed in `PRE_SUBMISSION_CHECKLIST.md`.
+2. Run the supplied 30-image model evaluation and retain the accuracy table.
+3. Scan the published images and import the API Gateway stage into Terraform
+   state when the S3 backend endpoint is reachable.
+4. Complete the architecture/demo video and team/individual reports.
