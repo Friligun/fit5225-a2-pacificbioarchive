@@ -1,4 +1,5 @@
 megadetector
+onnx2torch
 torch
 torchvision
 numpy

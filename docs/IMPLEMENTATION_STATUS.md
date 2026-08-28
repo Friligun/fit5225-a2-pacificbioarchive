@@ -13,11 +13,12 @@ credentials, tokens or other account secrets.
 - JavaScript and Python syntax checks pass.
 - Terraform provider initialization and `terraform validate` pass without
   warnings.
-- 8 non-asset integration/unit tests pass when run directly; the full suite
-  currently reports 9 passed and 7 failures caused by missing supplied assets.
+- Full Python test suite passes: 16 tests.
 - The local FastAPI service is running in development mode at
   `http://127.0.0.1:8000`.
 - Python bytecode compilation for `app/`, `lambdas/` and `worker/` passes.
+- The real local model smoke test passes on `Bos_taurus_1.JPG`, reporting model
+  version `supplied-2026-08` and the tag `Bos_taurus: 6`.
 
 ## Cloud account checks
 
@@ -32,17 +33,14 @@ credentials, tokens or other account secrets.
 
 ## Current blockers
 
-- The 30 supplied JPG fixtures are not present under
-  `tests/fixtures/test_images/`.
-- `models/mdv5a.pt` and `models/model.pt` are not present, so checksum tests
-  and the real Worker smoke test cannot run.
+- The supplied 30 JPG fixtures and both model files are restored locally and
+  match the manifest SHA-256 checksums. The files remain ignored by Git.
 - Terraform `1.13.2`, AWS CLI `1.46.0`, Alibaba Cloud CLI `3.4.11` and Docker
   Desktop are installed locally under `tools/` or the system application
   directory.
-- WSL installation has been started with elevation, but Windows must be
-  restarted before Docker Desktop can load the WSL 2 backend.
-- Ubuntu is now installed and running under WSL 2. The Docker service is
-  running, but Docker Desktop still reports that its backend cannot start.
+- Ubuntu is installed under WSL 2. Docker Desktop still cannot create its
+  backend named pipe and logs `Access is denied`; restarting the Docker service
+  requires administrator access.
 - A read-only `terraform plan` succeeds with `26 to add, 0 to change, 0 to
   destroy`; it has not been applied.
 - AWS identity checks succeed for account `748998941962`; Alibaba CLI account
@@ -57,9 +55,8 @@ credentials, tokens or other account secrets.
 
 ## Next actions
 
-1. Restore the supplied images, model weights and a short demonstration video;
-   then rerun `pytest -q` and `scripts/preflight.ps1 -RunModelSmoke`.
-2. Repair Docker Desktop's WSL 2 backend, then build and scan the three images.
+1. Repair Docker Desktop's WSL 2 backend with administrator access, then build
+   and scan the three images.
 3. Fill the remaining Terraform inputs (immutable image URIs, private Worker
    endpoint and final HTTPS callback/logout URLs), configure encrypted remote
    state, and review the plan before any apply.
