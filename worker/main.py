@@ -89,7 +89,14 @@ def model_asset(entry: dict) -> Path:
         raise RuntimeError("ALIBABA_OSS_ENDPOINT is required to restore model assets")
     import oss2
     target.parent.mkdir(parents=True, exist_ok=True)
-    auth = oss2.ProviderAuthV4(os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID", ""), os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", ""))
+    access_key_id = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "")
+    access_key_secret = os.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "")
+    security_token = os.getenv("ALIBABA_CLOUD_SECURITY_TOKEN", "")
+    auth = (
+        oss2.StsAuth(access_key_id, access_key_secret, security_token, auth_version=oss2.AUTH_VERSION_4)
+        if security_token
+        else oss2.ProviderAuthV4(access_key_id, access_key_secret)
+    )
     bucket = oss2.Bucket(auth, MODEL_ENDPOINT, MODEL_BUCKET, region=os.getenv("ALIBABA_CLOUD_REGION", "cn-hangzhou"))
     object_name = entry["uri"].lstrip("/")
     if MODEL_PREFIX:
