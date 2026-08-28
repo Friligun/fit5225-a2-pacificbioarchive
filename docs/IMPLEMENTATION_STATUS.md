@@ -40,9 +40,9 @@ credentials, tokens or other account secrets.
 - Terraform `1.13.2`, AWS CLI `1.46.0`, Alibaba Cloud CLI `3.4.11` and Docker
   Desktop are installed locally under `tools/` or the system application
   directory.
-- Ubuntu is installed under WSL 2. Docker Desktop still cannot create its
-  backend named pipe and logs `Access is denied`; restarting the Docker service
-  requires administrator access.
+- Ubuntu is installed under WSL 2 and Docker daemon is now running after an
+  administrator restart. Image builds are currently blocked by repeated EOF
+  responses while downloading public ECR/Docker Hub base-image layers.
 - A read-only `terraform plan` succeeds with `26 to add, 0 to change, 0 to
   destroy`; it has not been applied.
 - AWS identity checks succeed for account `748998941962`; Alibaba CLI account
@@ -57,9 +57,9 @@ credentials, tokens or other account secrets.
 
 ## Next actions
 
-1. Repair Docker Desktop's WSL 2 backend with administrator access, then build
-   and scan the three images. The Worker image should retain the tested
-   MegaDetector/ONNX dependency combination.
+1. Retry the three image builds from a network path that can complete public
+   ECR/Docker Hub layer downloads, then scan the images. The Worker image should
+   retain the tested MegaDetector/ONNX dependency combination.
 3. Fill the remaining Terraform inputs (immutable image URIs, private Worker
    endpoint and final HTTPS callback/logout URLs), configure encrypted remote
    state, and review the plan before any apply.
