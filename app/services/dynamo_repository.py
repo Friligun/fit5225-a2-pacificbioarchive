@@ -7,6 +7,7 @@ path. This avoids table scans and preserves user ownership at every lookup.
 from __future__ import annotations
 
 import hashlib
+import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -17,6 +18,8 @@ from boto3.dynamodb.types import TypeSerializer
 from botocore.exceptions import ClientError
 
 from app.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 def now() -> str:
@@ -33,6 +36,9 @@ class DynamoRepository:
             raise ValueError("PACIFICBIO_DYNAMODB_TABLE is required in production")
         self.settings = settings
         self.table = table or boto3.resource("dynamodb", region_name=settings.aws_region).Table(settings.dynamodb_table)
+        # Resource tables accept native Python values, while the transaction
+        # API below uses the low-level AttributeValue representation.
+        self._client = boto3.client("dynamodb", region_name=settings.aws_region) if table is None else table.meta.client
 
     @staticmethod
     def user_pk(owner: str) -> str: return f"USER#{owner}"
@@ -86,13 +92,16 @@ class DynamoRepository:
             "entity": "checksum-claim", "media_id": media["id"], "created_at": timestamp,
         }
         try:
-            self.table.meta.client.transact_write_items(TransactItems=[
+            self._client.transact_write_items(TransactItems=[
                 {"Put": {"TableName": self.table.name, "Item": self._ddb_map(item), "ConditionExpression": "attribute_not_exists(PK)"}},
                 {"Put": {"TableName": self.table.name, "Item": self._ddb_map(claim), "ConditionExpression": "attribute_not_exists(PK)"}},
             ])
         except ClientError as exc:
             if exc.response.get("Error", {}).get("Code") == "TransactionCanceledException":
-                return False
+                reasons = exc.response.get("CancellationReasons") or []
+                if any(reason.get("Code") == "ConditionalCheckFailed" for reason in reasons):
+                    return False
+                logger.exception("DynamoDB media reservation transaction cancelled")
             raise
         return True
 
