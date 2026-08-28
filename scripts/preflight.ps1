@@ -12,6 +12,11 @@ param([switch]$RunModelSmoke)
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $python = Join-Path $projectRoot ".venv\Scripts\python.exe"
 $terraformRoot = Join-Path $projectRoot "infra\terraform"
+$terraform = (Get-Command terraform -ErrorAction SilentlyContinue).Source
+if (-not $terraform) {
+  $localTerraform = Join-Path $projectRoot "tools\terraform.exe"
+  if (Test-Path -LiteralPath $localTerraform) { $terraform = $localTerraform }
+}
 
 if (-not (Test-Path -LiteralPath $python)) {
   throw "Local Python environment is missing: $python"
@@ -24,11 +29,12 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "Python tests failed" }
 
   Write-Host "[2/5] Terraform validation"
+  if (-not $terraform) { throw "Terraform is missing from PATH and tools\terraform.exe" }
   Push-Location $terraformRoot
   try {
-    terraform fmt -check
+    & $terraform fmt -check
     if ($LASTEXITCODE -ne 0) { throw "Terraform formatting check failed" }
-    terraform validate
+    & $terraform validate
     if ($LASTEXITCODE -ne 0) { throw "Terraform validation failed" }
   } finally { Pop-Location }
 
