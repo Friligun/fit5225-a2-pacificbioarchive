@@ -9,7 +9,9 @@ credentials, tokens or other account secrets.
 - Terraform contains AWS resources plus the private Alibaba OSS model bucket.
 - The Worker callback uses HMAC authentication and the Worker documentation
   describes Alibaba Function Compute.
-- Local dependencies install cleanly (`pip check`).
+- Worker dependencies are installed and the real model smoke test passes. The
+  local environment reports a third-party protobuf constraint warning because
+  MegaDetector pins `protobuf<=3.20.1` while ONNX 1.22 requests a newer range.
 - JavaScript and Python syntax checks pass.
 - Terraform provider initialization and `terraform validate` pass without
   warnings.
@@ -56,7 +58,8 @@ credentials, tokens or other account secrets.
 ## Next actions
 
 1. Repair Docker Desktop's WSL 2 backend with administrator access, then build
-   and scan the three images.
+   and scan the three images. The Worker image should retain the tested
+   MegaDetector/ONNX dependency combination.
 3. Fill the remaining Terraform inputs (immutable image URIs, private Worker
    endpoint and final HTTPS callback/logout URLs), configure encrypted remote
    state, and review the plan before any apply.
