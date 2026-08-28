@@ -211,6 +211,13 @@ resource "aws_apigatewayv2_api" "http" {
   protocol_type = "HTTP"
   tags          = local.tags
 }
+
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.http.id
+  name        = "$default"
+  auto_deploy = true
+}
+
 resource "aws_apigatewayv2_authorizer" "cognito" {
   api_id           = aws_apigatewayv2_api.http.id
   authorizer_type  = "JWT"
