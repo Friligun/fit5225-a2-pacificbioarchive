@@ -21,6 +21,9 @@ credentials, tokens or other account secrets.
 - Python bytecode compilation for `app/`, `lambdas/` and `worker/` passes.
 - The real local model smoke test passes on `Bos_taurus_1.JPG`, reporting model
   version `supplied-2026-08` and the tag `Bos_taurus: 6`.
+- All three local container images build successfully. The API reports HTTP 200
+  in production mode, the Dispatcher handles an empty SQS event, and the Worker
+  `/healthz` endpoint reports HTTP 200 on CPU.
 
 ## Cloud account checks
 
@@ -40,9 +43,11 @@ credentials, tokens or other account secrets.
 - Terraform `1.13.2`, AWS CLI `1.46.0`, Alibaba Cloud CLI `3.4.11` and Docker
   Desktop are installed locally under `tools/` or the system application
   directory.
-- Ubuntu is installed under WSL 2 and Docker daemon is now running after an
-  administrator restart. Image builds are currently blocked by repeated EOF
-  responses while downloading public ECR/Docker Hub base-image layers.
+- Ubuntu is installed under WSL 2 and Docker daemon is running after an
+  administrator restart. Docker Hub base images are reachable; the AWS Lambda
+  public ECR base image remains unreachable through the current network, so the
+  API and Dispatcher use the AWS Lambda Runtime Interface Client on the tested
+  Python base image instead.
 - A read-only `terraform plan` succeeds with `26 to add, 0 to change, 0 to
   destroy`; it has not been applied.
 - AWS identity checks succeed for account `748998941962`; Alibaba CLI account
@@ -57,9 +62,10 @@ credentials, tokens or other account secrets.
 
 ## Next actions
 
-1. Retry the three image builds from a network path that can complete public
-   ECR/Docker Hub layer downloads, then scan the images. The Worker image should
-   retain the tested MegaDetector/ONNX dependency combination.
+1. Scan the built images, then push immutable API and Dispatcher digests to the
+   private ECR repositories after Terraform bootstrap. The Worker image should
+   retain the tested MegaDetector/ONNX dependency combination when deployed to
+   Alibaba Function Compute.
 3. Fill the remaining Terraform inputs (immutable image URIs, private Worker
    endpoint and final HTTPS callback/logout URLs), configure encrypted remote
    state, and review the plan before any apply.
