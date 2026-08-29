@@ -41,12 +41,12 @@ The deployed AWS region is `ap-southeast-2`; the Alibaba region is `cn-hangzhou`
 
 | Name and student ID | Contribution % | Delivered work |
 |---|---:|---|
-| **[Member 1 name] ([student ID])** | **[ ]%** | API contracts, Cognito/JWT authentication, owner-scoped media and DynamoDB persistence; commits are visible in the private repository. |
-| **[Member 2 name] ([student ID])** | **[ ]%** | Terraform AWS/Alibaba infrastructure, SQS dispatcher, Function Compute worker integration and deployment evidence. |
-| **[Member 3 name] ([student ID])** | **[ ]%** | Browser UI, upload/checksum flow, search, bulk tag and deletion workflows, and live test evidence. |
-| **[Member 4 name] ([student ID], if applicable)** | **[ ]%** | Model validation, security testing, documentation and report/evidence integration. |
+| **Yuhan Pei (ypei0023)** | **25%** | **Member 01: API, authentication and persistence.** API contracts, Cognito/JWT authentication, owner-scoped media and DynamoDB persistence; commits are visible in the private repository. |
+| **Mingyu Xu (mxuu0082)** | **25%** | **Member 02: media and frontend workflow.** Browser UI, upload/checksum flow, search, thumbnail resolution, bulk tag and deletion workflows, and live UI evidence. |
+| **Zhihao Qian ([student ID])** | **25%** | **Member 03: ML worker and video processing.** Function Compute worker integration, manifest/checksum validation, image classification, video frame sampling, thumbnail generation and callback evidence. |
+| **Zhicong Wang ([student ID])** | **25%** | **Member 04: infrastructure and deployment.** Terraform AWS/Alibaba resources, IAM/RAM boundaries, SQS/DLQ, deployment validation, security scans and operational evidence. |
 
-Replace bracketed identity and percentage fields with the team's truthful allocation. The percentages must comply with the assignment rule and total 100%; every listed member must have a visible repository contribution.
+Replace each remaining student-ID placeholder with the team's official student ID. The four contribution percentages total 100%; verify that each member's branch/commit history is visible in the private repository before submission.
 
 ## 6. Generative AI declaration
 
