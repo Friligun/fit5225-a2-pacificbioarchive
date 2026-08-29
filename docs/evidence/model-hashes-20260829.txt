@@ -1,0 +1,8 @@
+Active model version: supplied-2026-08
+Manifest: models/model-manifest.json
+mdv5a.pt SHA-256: fe3e90e4b1955821ab7c1f88b446dc0c8cb25e109fdd1872916a55305294a5ef
+model.pt SHA-256: dfc99bd1e0c8b14c6755f4504460c414f678e72936d5f849f9947dff84ca913a
+video.mp4 SHA-256: 7ea7541da1db313a6550a086dfa78d1d7002d96e5ed4a7e995a12d040800c97f
+Function Compute worker: pacificbio-worker
+Health check: HTTP 200
+Video processing: READY; fps=1; 16 frames at timestamps 0–15 seconds

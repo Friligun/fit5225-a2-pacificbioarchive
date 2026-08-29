@@ -1,0 +1,8 @@
+Command: .\.venv\Scripts\python.exe -m pytest -q tests/test_api.py -k "tag or species or delete or bulk or query"
+Result: 3 passed, 3 deselected in 3.83s
+
+Covered contracts:
+- tag/species query and logical AND semantics
+- bulk tag operation 1 (add) and operation 0 (remove)
+- owner-scoped media deletion
+- temporary query handling

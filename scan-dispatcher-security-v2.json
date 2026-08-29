@@ -1,0 +1,54 @@
+﻿{
+    "imageScanFindings": {
+        "findings": [
+            {
+                "name": "CVE-2026-57433",
+                "description": "Storable versions before 3.41 for Perl have a signed integer overflow when deserializing a crafted SX_HOOK record. retrieve_hook_common reads a signed 32-bit item count from an SX_HOOK record and calls av_extend with that count plus one. A count of I32_MAX wraps the addition to a negative value. A crafted blob passed to thaw or retrieve triggers the overflow; av_extend receives the negative count and dies with a panic, terminating the deserialization.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-57433",
+                "severity": "CRITICAL",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "9.8"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-19487",
+                "description": "Perl versions from 5.9.4 before 5.41.9 produce incorrect regular expression match results when a stale failure flag ends the Aho-Corasick prescan early in S_find_byclass. The prescan walks the subject for positions where the full pattern could match, and the engine tries it from the leftmost one recorded. A failing transition sets the failed flag, and a later successful transition does not clear it, so the prescan reads the stale flag as a failure and stops before it can record a candidate that starts earlier. It takes a subject where one candidate is recorded and a later character then forces a fallback through a fail link that succeeds. Example: \"ABCDE\" =~ m/ABCF|BCDE|C/; # matches C at offset 2, not BCDE \"ABCDE\" =~ m/ABCF|BCDE|C(G)/; # no match, BCDE missed An alternation like this can miss input it should match, or match it on the wrong branch, so an access or filtering decision made from the result can be wrong.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-19487",
+                "severity": "MEDIUM",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "5.3"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-41992",
+                "description": 

@@ -1,0 +1,16 @@
+video.mp4 source stream (worker ffprobe):
+  width=1280
+  height=720
+  avg_frame_rate=25/1
+  duration=15.680000
+  nb_frames=392
+
+Worker processing filter: fps=1,showinfo
+  output frame index / timestamp (seconds):
+  0 / 0, 1 / 1, 2 / 2, 3 / 3, 4 / 4, 5 / 5, 6 / 6, 7 / 7,
+  8 / 8, 9 / 9, 10 / 10, 11 / 11, 12 / 12, 13 / 13, 14 / 14, 15 / 15
+
+The deployed worker uses the same `ffmpeg -vf fps=1` filter in
+`worker/main.py`. The production DynamoDB record for media
+66d273fd-edba-4628-a9a1-78882d943191 reached READY with a thumbnail and
+aggregate tags after the Function Compute startup health-check repair.

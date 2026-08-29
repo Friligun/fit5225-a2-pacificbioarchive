@@ -116,7 +116,9 @@ resource "aws_s3_bucket_cors_configuration" "media" {
   cors_rule {
     allowed_headers = ["content-type", "x-amz-checksum-sha256", "x-amz-meta-sha256"]
     allowed_methods = ["PUT"]
-    allowed_origins = var.ui_callback_urls
+    # Browser Origin headers never include a trailing slash; keep Cognito's
+    # exact redirect URI (which does) separate from the CORS origin value.
+    allowed_origins = [for origin in var.ui_callback_urls : trimsuffix(origin, "/")]
     expose_headers  = ["ETag", "x-amz-checksum-sha256"]
     max_age_seconds = 300
   }
@@ -251,8 +253,8 @@ resource "aws_iam_role_policy" "api" {
     Statement = [
       { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = "*" },
       { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"], Resource = ["${aws_s3_bucket.media.arn}/raw/*", "${aws_s3_bucket.media.arn}/thumbnails/*", "${aws_s3_bucket.media.arn}/temporary-query/*"] },
-      { Effect = "Allow", Action = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:TransactWriteItems"], Resource = [aws_dynamodb_table.media.arn, "${aws_dynamodb_table.media.arn}/index/*"] },
-      { Effect = "Allow", Action = ["sns:Publish"], Resource = aws_sns_topic.notifications.arn },
+      { Effect = "Allow", Action = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:BatchWriteItem", "dynamodb:TransactWriteItems"], Resource = [aws_dynamodb_table.media.arn, "${aws_dynamodb_table.media.arn}/index/*"] },
+      { Effect = "Allow", Action = ["sns:Publish", "sns:Subscribe"], Resource = aws_sns_topic.notifications.arn },
       { Effect = "Allow", Action = ["sqs:SendMessage"], Resource = aws_sqs_queue.processing.arn }
     ]
   })
@@ -263,8 +265,11 @@ resource "aws_lambda_function" "api" {
   package_type  = "Image"
   image_uri     = var.api_lambda_image_uri
   role          = aws_iam_role.api.arn
-  timeout       = 30
-  memory_size   = 1024
+  # Query-by-file invokes the remote model synchronously and may include a
+  # cold-start download, so the API timeout must exceed the worker startup
+  # window. Upload processing remains asynchronous through SQS.
+  timeout     = 300
+  memory_size = 1024
   environment {
     variables = {
       PACIFICBIO_ENV                         = "production"

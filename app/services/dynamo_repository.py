@@ -119,23 +119,31 @@ class DynamoRepository:
         # Tag entries are small (the supplied model has 46 labels), so batch
         # deletion/rewrite is well within DynamoDB batch limits.
         existing = self._query_all(KeyConditionExpression=Key("PK").eq(f"TAGOWNER#{owner}#MEDIA#{media_id}"))
-        with self.table.batch_writer() as batch:
-            for item in existing:
-                batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
-                # Remove the companion query item as well; otherwise a tag
-                # removed through the bulk API could remain searchable.
-                species = item["SK"].removeprefix("TAG#")
-                batch.delete_item(Key={"PK": f"TAG#{owner}#{species}", "SK": self.media_sk(media_id)})
-            for species, detail in tags.items():
-                batch.put_item(Item={
+        for item in existing:
+            self._client.delete_item(TableName=self.table.name, Key=self._ddb_map({"PK": item["PK"], "SK": item["SK"]}))
+            # Remove the companion query item as well; otherwise a tag
+            # removed through the bulk API could remain searchable.
+            species = item["SK"].removeprefix("TAG#")
+            self._client.delete_item(
+                TableName=self.table.name,
+                Key=self._ddb_map({"PK": f"TAG#{owner}#{species}", "SK": self.media_sk(media_id)}),
+            )
+        for species, detail in tags.items():
+            self._client.put_item(
+                TableName=self.table.name,
+                Item=self._ddb_map({
                     "PK": f"TAGOWNER#{owner}#MEDIA#{media_id}", "SK": f"TAG#{species}",
                     "entity": "tag-link", "query_pk": f"TAG#{owner}#{species}", "query_sk": self.media_sk(media_id),
                     "media_id": media_id, "tag_count": int(detail["count"]), "source": detail["source"], "confidence": detail.get("confidence"),
-                })
-                batch.put_item(Item={
+                }),
+            )
+            self._client.put_item(
+                TableName=self.table.name,
+                Item=self._ddb_map({
                     "PK": f"TAG#{owner}#{species}", "SK": self.media_sk(media_id), "entity": "tag-query",
                     "media_id": media_id, "tag_count": int(detail["count"]),
-                })
+                }),
+            )
 
     def update_processing_result(self, media_id: str, owner_sub: str, *, status: str, thumbnail_path: str | None, thumbnail_url: str | None, tags: dict, model_version: str | None, expected_status: str | None = None) -> bool:
         item = self.get_media(media_id, owner_sub)
@@ -205,6 +213,18 @@ class DynamoRepository:
         for species, minimum in {key.strip().lower(): value for key, value in requested.items()}.items():
             entries = self._query_all(KeyConditionExpression=Key("PK").eq(f"TAG#{owner_sub}#{species}"))
             found = {entry["media_id"] for entry in entries if int(entry["tag_count"]) >= int(minimum)}
+            # Keep searches correct for records created before tag-query
+            # companions were deployed. The owner partition is already
+            # access-controlled, so this fallback does not broaden ownership.
+            if not found:
+                media_items = self._query_all(
+                    KeyConditionExpression=Key("PK").eq(self.user_pk(owner_sub)) & Key("SK").begins_with("MEDIA#")
+                )
+                found = {
+                    item["id"] for item in media_items
+                    if item.get("status") == "READY"
+                    and int(item.get("tags", {}).get(species, {}).get("count", 0)) >= int(minimum)
+                }
             candidate_ids = found if candidate_ids is None else candidate_ids & found
             if not candidate_ids:
                 return []

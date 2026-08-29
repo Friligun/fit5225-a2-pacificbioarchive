@@ -8,6 +8,12 @@ terraform {
     encrypt        = true
     use_lockfile   = true
     use_path_style = true
+    # The default regional hostname is intercepted by the current network;
+    # the dual-stack regional endpoint is reachable and serves the same S3
+    # bucket without changing state semantics.
+    endpoints = {
+      s3 = "https://s3.dualstack.ap-southeast-2.amazonaws.com"
+    }
   }
 
   required_providers {

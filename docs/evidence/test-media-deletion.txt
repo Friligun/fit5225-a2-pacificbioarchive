@@ -1,0 +1,5 @@
+测试文件：query-test.jpg
+媒体 ID：80c8da15-2c96-46f6-b862-c93333ffb626
+删除前：页面显示该媒体，状态 image | processing | not classified
+删除后：页面显示 Selected media deleted from cloud storage and the archive.；媒体记录消失。
+验证时间：2026-08-29

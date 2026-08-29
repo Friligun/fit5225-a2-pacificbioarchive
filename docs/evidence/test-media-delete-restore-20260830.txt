@@ -1,0 +1,15 @@
+Test media deletion and restoration evidence (2026-08-30)
+
+- Test file: delete-test-20260830.JPG
+- Deleted media ID: 37d1d549-1fd1-4287-9b47-f64d535cd974
+- Before deletion: S3 raw/source.jpg and thumbnails/thumbnail.jpg existed;
+  DynamoDB returned 46 items and included the test record.
+- After deletion: both test S3 prefixes returned zero objects; DynamoDB
+  returned 44 items and no longer contained the test filename.
+- Restored media ID: 71ad5be9-4dc0-448f-86d1-d2a17ab64847
+- After restoration: application showed READY with `alectura_lathami x 1`;
+  S3 source.jpg and thumbnail.jpg existed again; DynamoDB contained the
+  restored record (48 items including its media/index/tag records).
+
+The restored test media was intentionally left in the archive for the final
+demonstration. No existing production demonstration media was deleted.

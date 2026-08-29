@@ -1,0 +1,150 @@
+﻿{
+    "imageScanFindings": {
+        "findings": [
+            {
+                "name": "CVE-2026-7010",
+                "description": "HTTP::Tiny versions before 0.093 for Perl do not validate CRLF in HTTP request lines or control field header values. The unvalidated inputs are the method and URI in the request line, the URL host that becomes the `Host:` header, and HTTP/1.1 control data field values. An attacker who controls one of these inputs, for example a user supplied URL passed to a webhook or URL fetch endpoint, can inject additional headers and smuggle requests to the upstream server.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-7010",
+                "severity": "MEDIUM",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "6.5"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-11822",
+                "description": "SQLite before 3.53.2 contains memory corruption vulnerabilities in the FTS5 full-text search extension that allow attackers to cause process crashes, memory exhaustion, or arbitrary code execution by supplying a crafted database with malformed FTS5 page data. Attackers can trigger an out-of-bounds read in fts5LeafSeek() via an attacker-controlled loop bound and a heap buffer overflow write in fts5ChunkIterate() through a crafted continuation page causing an integer underflow, exploitable when an FTS5 MATCH query is executed against the malicious database.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-11822",
+                "severity": "HIGH",
+                "attributes": [
+                    {
+                        "key": "CVSS4_SCORE",
+                        "value": "8.5"
+                    },
+                    {
+                        "key": "CVSS4_VECTOR",
+                        "value": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "3.46.1-7+deb13u1"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "sqlite3"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-12087",
+                "description": "Socket versions before 2.041 for Perl have an out-of-bounds heap read. In Socket.xs, pack_ip_mreq_source() checks the length of its source argument before the argument is read, so the check tests the byte length carried over from the preceding multiaddr argument instead. Both addresses occupy a 4-byte field, so a valid multiaddr lets a source of any length pass the check, and the source is then copied into the 4-byte imr_sourceaddr field with a fixed-size copy. A source shorter than 4 bytes is not rejected, and the copy reads up to 3 bytes past the end of its buffer. Calling pack_ip_mreq_source() with a source value shorter than 4 bytes copies adjacent heap memory into the returned packed structure.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-12087",
+                "severity": "CRITICAL",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "9.1"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-48961",
+                "description": "IO::Compress versions from 2.207 before 2.220 for Perl ship a zipdetails CLI tool that crashes with undefined subroutine on Info-ZIP Unix Extra Field with 8-byte UID or GID. When decode_ux() in bin/zipdetails handles an Info-ZIP Unix Extra Field (tag 0x7875) with UID Size or GID Size set to 8, causing zipdetails to decode an 8-byte UID or GID value, it dispatches through decodeLitteEndian(), which calls a misnamed helper unpackValueQ. The actual function defined in the same file is unpackValue_Q (with underscore); the call raises 'Undefined subroutine &main::unpackValueQ' and the script exits with status 255. Library callers of IO::Compress and IO::Uncompress are not affected; the defect is in the bundled CLI tool.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-48961",
+                "severity": "HIGH",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "7.3"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-13221",
+                "description": "Perl versions through 5.43.9 produce silently incorrect regular expression matches when an alternation of more than 65535 fixed string branches is compiled into a trie in Perl_study_chunk. When such branches are combined into a trie, the delta between the first branch and the shared tail is stored in a 16-bit field. A branch count above 65535 overflows the field, and the trie's match decision table is truncated with no warning or error. A pattern of this shape produces false positive matches (matching strings it should not) and false negative matches (failing to match strings it should). When such a pattern gates an access or filtering decision, the result is wrong.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-13221",
+                "severity": "CRITICAL",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "9.1"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "5.40.1-6"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "perl"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-5450",
+                "description": "Calling the scanf family of functions with a %mc (malloc'd character match) in the GNU C Library version 2.7 to version 2.43 with a format width specifier with an explicit width greater than 1024 could result in a one byte heap buffer overflow.",
+                "uri": "https://nvd.nist.gov/vuln/detail/CVE-2026-5450",
+                "severity": "CRITICAL",
+                "attributes": [
+                    {
+                        "key": "CVSS3_SCORE",
+                        "value": "9.8"
+                    },
+                    {
+                        "key": "CVSS3_VECTOR",
+                        "value": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+                    },
+                    {
+                        "key": "package_version",
+                        "value": "2.41-12+deb13u3"
+                    },
+                    {
+                        "key": "package_name",
+                        "value": "glibc"
+                    }
+                ]
+            },
+            {
+                "name": "CVE-2026-41992",
+                "description": 

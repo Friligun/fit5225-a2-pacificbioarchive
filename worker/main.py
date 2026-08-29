@@ -121,7 +121,12 @@ def load_classifier(manifest: dict):
 
 
 def detector_records(image_path: Path, manifest: dict) -> list[dict]:
-    from megadetector.detection import run_detector_batch
+    try:
+        from megadetector.detection import run_detector_batch
+    except ModuleNotFoundError:
+        # MegaDetector 5.x installs its modules at the top level, while newer
+        # releases use the megadetector package namespace.
+        from detection import run_detector_batch
 
     detector = model_asset(manifest["detector"])
     expected = manifest["detector"]["sha256"].lower()
@@ -220,47 +225,60 @@ def healthz() -> dict:
 @app.post("/process")
 async def process(request: ProcessRequest, x_worker_key: str | None = Header(default=None)) -> dict:
     authenticate(x_worker_key)
-    manifest = load_manifest()
-    with tempfile.TemporaryDirectory(prefix="pacificbio-worker-") as temp:
-        root = Path(temp)
-        source = root / "input"
-        async with httpx.AsyncClient(timeout=300, follow_redirects=False) as client:
-            response = await client.get(request.input_url)
-            response.raise_for_status()
-            source.write_bytes(response.content)
-        if request.media_type == "image":
-            tags = process_image(source, manifest)
-            thumbnail = root / "thumbnail.jpg"
-            create_thumbnail(source, thumbnail)
-        elif request.media_type == "video":
-            tags: Counter[str] = Counter()
-            frames = video_frames(source, root / "frames")
-            for frame in frames:
-                tags.update(process_image(frame, manifest))
-            if not frames:
-                raise HTTPException(status_code=422, detail="Video has no frames at one frame per second")
-            thumbnail = root / "thumbnail.jpg"
-            create_thumbnail(frames[0], thumbnail)
-        else:
-            raise HTTPException(status_code=422, detail="Unsupported media type")
-        await upload_thumbnail(request.thumbnail_upload_url, thumbnail)
-        await deliver_callback(request, tags, manifest)
-        return {"status": "completed", "media_id": request.media_id, "tag_count": sum(tags.values())}
+    try:
+        manifest = load_manifest()
+        with tempfile.TemporaryDirectory(prefix="pacificbio-worker-") as temp:
+            root = Path(temp)
+            source = root / "input"
+            async with httpx.AsyncClient(timeout=300, follow_redirects=False) as client:
+                response = await client.get(request.input_url)
+                response.raise_for_status()
+                source.write_bytes(response.content)
+            if request.media_type == "image":
+                tags = process_image(source, manifest)
+                thumbnail = root / "thumbnail.jpg"
+                create_thumbnail(source, thumbnail)
+            elif request.media_type == "video":
+                tags = Counter()
+                frames = video_frames(source, root / "frames")
+                for frame in frames:
+                    tags.update(process_image(frame, manifest))
+                if not frames:
+                    raise HTTPException(status_code=422, detail="Video has no frames at one frame per second")
+                thumbnail = root / "thumbnail.jpg"
+                create_thumbnail(frames[0], thumbnail)
+            else:
+                raise HTTPException(status_code=422, detail="Unsupported media type")
+            await upload_thumbnail(request.thumbnail_upload_url, thumbnail)
+            await deliver_callback(request, tags, manifest)
+            return {"status": "completed", "media_id": request.media_id, "tag_count": sum(tags.values())}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # The endpoint is protected by the dispatcher-only shared key. Returning
+        # the exception class makes cloud failures diagnosable when FC logging is
+        # disabled, without exposing credentials or request contents.
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
 
 @app.post("/query")
 async def query(request: QueryRequest, x_worker_key: str | None = Header(default=None)) -> dict:
     """Classify an ephemeral image and return tags without writing archive data."""
     authenticate(x_worker_key)
-    manifest = load_manifest()
-    with tempfile.TemporaryDirectory(prefix="pacificbio-query-") as temp:
-        source = Path(temp) / "query-image"
-        async with httpx.AsyncClient(timeout=300, follow_redirects=False) as client:
-            response = await client.get(request.input_url)
-            response.raise_for_status()
-            source.write_bytes(response.content)
-        tags = process_image(source, manifest)
-    return {
-        "tags": {species.lower(): {"count": count, "source": "auto", "confidence": None} for species, count in tags.items()},
-        "model_version": manifest["active_version"],
-    }
+    try:
+        manifest = load_manifest()
+        with tempfile.TemporaryDirectory(prefix="pacificbio-query-") as temp:
+            source = Path(temp) / "query-image"
+            async with httpx.AsyncClient(timeout=300, follow_redirects=False) as client:
+                response = await client.get(request.input_url)
+                response.raise_for_status()
+                source.write_bytes(response.content)
+            tags = process_image(source, manifest)
+        return {
+            "tags": {species.lower(): {"count": count, "source": "auto", "confidence": None} for species, count in tags.items()},
+            "model_version": manifest["active_version"],
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
