@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import Settings, get_settings
@@ -169,7 +169,17 @@ def media_thumbnail(media_id: str, user: CurrentUser, media_service: MediaServic
         item = database.get_media(media_id, user.subject)
         if not item or not item.get("thumbnail_path"):
             raise HTTPException(status_code=404, detail="Thumbnail not found")
-        return RedirectResponse(S3Storage(settings).download_url(item["thumbnail_path"]))
+        # Proxy the private object through the authenticated API. A browser
+        # <img> request cannot attach the Cognito JWT to a cross-origin S3
+        # redirect, which otherwise renders as a broken image.
+        storage = S3Storage(settings)
+        try:
+            obj = storage.client.get_object(Bucket=storage.bucket, Key=item["thumbnail_path"])
+        except Exception as exc:
+            if getattr(exc, "response", {}).get("Error", {}).get("Code") in {"404", "NoSuchKey", "NotFound"}:
+                raise HTTPException(status_code=404, detail="Thumbnail object not found") from exc
+            raise
+        return StreamingResponse(obj["Body"].iter_chunks(), media_type=obj.get("ContentType", "image/jpeg"))
     try:
         path, media_type = media_service.get_owned_path(media_id, user.subject, thumbnail=True)
     except FileNotFoundError as exc:

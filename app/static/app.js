@@ -1,5 +1,6 @@
 const state = { user: localStorage.getItem("pacificbio-demo-user") || "demo.researcher", media: [], environment: "development", auth: null };
 const statusNode = document.querySelector("#status");
+const previewObjectUrls = new Set();
 
 function setStatus(message, isError = false) {
   statusNode.textContent = message;
@@ -32,8 +33,34 @@ function tagsFromInput(value) {
   if (!Object.keys(tags).length) throw new Error("Enter at least one tag");
   return tags;
 }
+function clearPreviewObjectUrls() {
+  for (const url of previewObjectUrls) URL.revokeObjectURL(url);
+  previewObjectUrls.clear();
+}
+async function loadThumbnail(image, link, thumbnailUrl) {
+  try {
+    const target = new URL(thumbnailUrl, window.location.href);
+    const headers = new Headers();
+    // Protected API thumbnails need the same JWT as the JSON API calls. Do not
+    // send that token to a cross-origin signed object URL.
+    if (state.environment === "production" && target.origin === window.location.origin) {
+      const token = localStorage.getItem("pacificbio-id-token");
+      if (!token) throw new Error("Sign-in required");
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    const response = await fetch(target.href, { headers });
+    if (!response.ok) throw new Error(`Thumbnail request failed (${response.status})`);
+    const objectUrl = URL.createObjectURL(await response.blob());
+    previewObjectUrls.add(objectUrl);
+    image.src = objectUrl;
+  } catch (_error) {
+    image.remove();
+    link.textContent = "Thumbnail unavailable";
+  }
+}
 function render(media) {
   state.media = media;
+  clearPreviewObjectUrls();
   const grid = document.querySelector("#media-grid");
   grid.replaceChildren();
   const template = document.querySelector("#media-card-template");
@@ -44,7 +71,7 @@ function render(media) {
     card.dataset.url = item.source_url;
     const thumbnail = node.querySelector(".thumbnail");
     const previewLink = node.querySelector(".preview-link");
-    if (item.thumbnail_url) { thumbnail.src = item.thumbnail_url; previewLink.href = item.source_url; }
+    if (item.thumbnail_url) { previewLink.href = item.source_url; }
     else { thumbnail.remove(); previewLink.textContent = item.media_type === "video" ? "Video processing completed" : "No thumbnail"; previewLink.href = item.source_url; }
     node.querySelector(".filename").textContent = item.original_name;
     node.querySelector(".metadata").textContent = `${item.media_type} | ${item.status.toLowerCase()} | ${item.model_version || "not classified"}`;
@@ -52,6 +79,7 @@ function render(media) {
     Object.entries(item.tags).forEach(([name, detail]) => { const chip = document.createElement("span"); chip.className = "tag"; chip.textContent = `${name} x ${detail.count}`; tags.append(chip); });
     node.querySelector(".source-link").href = item.source_url;
     grid.append(node);
+    if (item.thumbnail_url) loadThumbnail(grid.lastElementChild.querySelector(".thumbnail"), grid.lastElementChild.querySelector(".preview-link"), item.thumbnail_url);
   }
   if (!media.length) grid.innerHTML = "<p>No matching media yet. Upload a wildlife observation to begin.</p>";
 }
